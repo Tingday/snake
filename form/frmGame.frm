@@ -1,6 +1,5 @@
 VERSION 5.00
 Begin VB.Form frmGame 
-   AutoRedraw      =   -1  'True
    BackColor       =   &H00FFFFFF&
    BorderStyle     =   1  'Fixed Single
    Caption         =   "贪吃蛇"
@@ -62,8 +61,8 @@ Dim N_Food_White As Long
 Dim N_Food_Red As Long
 '类型
 Private Type Point
-        x As Long
-        y As Long
+        X As Long
+        Y As Long
 End Type
 
 Private Type RECTL
@@ -95,6 +94,8 @@ Private Enum Food_Color
     Food_Color_Red = 1
 End Enum
 '--------------------------------------------------------变量到此结束---------------------------------------
+Private ScoreUpdate As Boolean '值为真时重绘分数
+
 '--------------------------------------------------------函 数 过  程---------------------------------------
 Private Function MoveSnake() As Boolean '移动蛇与判断
     Dim Counter_i As Integer '计数器i
@@ -105,72 +106,74 @@ Private Function MoveSnake() As Boolean '移动蛇与判断
     Select Case mUser_Direction '根据方向移动，每次一个单位Game_Wide
         Case User_Direction_Up
             If mSnake_Direction <> Snake_direction_Down Then
-                Snakes(0).y = Snakes(0).y - Game_Wide
+                Snakes(0).Y = Snakes(0).Y - Game_Wide
                 mSnake_Direction = Snake_Direction_Up
             Else
                 mUser_Direction = User_direction_Down
-                Snakes(0).y = Snakes(0).y + Game_Wide
+                Snakes(0).Y = Snakes(0).Y + Game_Wide
             End If
         Case User_direction_Down
             If mSnake_Direction <> Snake_Direction_Up Then
-                Snakes(0).y = Snakes(0).y + Game_Wide
+                Snakes(0).Y = Snakes(0).Y + Game_Wide
                 mSnake_Direction = Snake_direction_Down
             Else
                 mUser_Direction = User_Direction_Up
-                Snakes(0).y = Snakes(0).y - Game_Wide
+                Snakes(0).Y = Snakes(0).Y - Game_Wide
             End If
         Case User_Direction_Left
             If mSnake_Direction <> Snake_Direction_Right Then
-                Snakes(0).x = Snakes(0).x - Game_Wide
+                Snakes(0).X = Snakes(0).X - Game_Wide
                 mSnake_Direction = Snake_Direction_Left
             Else
                 mUser_Direction = User_Direction_Right
-                Snakes(0).x = Snakes(0).x + Game_Wide
+                Snakes(0).X = Snakes(0).X + Game_Wide
             End If
         Case User_Direction_Right
             If mSnake_Direction <> Snake_Direction_Left Then
-                Snakes(0).x = Snakes(0).x + Game_Wide
+                Snakes(0).X = Snakes(0).X + Game_Wide
                 mSnake_Direction = Snake_Direction_Right
             Else
                 mUser_Direction = User_Direction_Left
-                Snakes(0).x = Snakes(0).x - Game_Wide
+                Snakes(0).X = Snakes(0).X - Game_Wide
             End If
     End Select
     '穿墙效果实现
-    If Snakes(0).y >= Game_Frame.Bottom Then Snakes(0).y = Game_Frame.Top
-    If Snakes(0).y < Game_Frame.Top Then Snakes(0).y = Game_Frame.Bottom - Game_Wide
-    If Snakes(0).x >= Game_Frame.Right Then Snakes(0).x = Game_Frame.Left
-    If Snakes(0).x < Game_Frame.Left Then Snakes(0).x = Game_Frame.Right - Game_Wide
+    If Snakes(0).Y >= Game_Frame.Bottom Then Snakes(0).Y = Game_Frame.Top
+    If Snakes(0).Y < Game_Frame.Top Then Snakes(0).Y = Game_Frame.Bottom - Game_Wide
+    If Snakes(0).X >= Game_Frame.Right Then Snakes(0).X = Game_Frame.Left
+    If Snakes(0).X < Game_Frame.Left Then Snakes(0).X = Game_Frame.Right - Game_Wide
     '碰撞检测
     For Counter_i = 1 To mSnake_length
-        If Snakes(0).x = Snakes(Counter_i).x And Snakes(0).y = Snakes(Counter_i).y Then
+        If Snakes(0).X = Snakes(Counter_i).X And Snakes(0).Y = Snakes(Counter_i).Y Then
             mGame_State = Game_STATE_STOP
             游戏.Caption = "开始游戏"
             MsgBox "游戏结束！"
             Exit Function
         End If
     Next Counter_i
-    If Snakes(0).x = Food.x And Snakes(0).y = Food.y Then '食物碰撞检测
+    If Snakes(0).X = Food.X And Snakes(0).Y = Food.Y Then '食物碰撞检测
         N_Food_White = N_Food_White + 1
         Food_Eated = Food
         CreateFood Food_Color_White
         If N_Food_White Mod 8 = 0 Then CreateFood Food_Color_Red '每吃8个食物就出现一个红色食物
+        ScoreUpdate = True
     End If
-    If Snakes(0).x = Food_Red.x And Snakes(0).y = Food_Red.y Then '红食物碰撞检测
+    If Snakes(0).X = Food_Red.X And Snakes(0).Y = Food_Red.Y Then '红食物碰撞检测
         N_Food_Red = N_Food_Red + 1
         Food_Eated = Food_Red
-        Food_Red.x = -1
-        Food_Red.y = -1
+        Food_Red.X = -1
+        Food_Red.Y = -1
+        ScoreUpdate = True
     End If
     score = N_Food_White + N_Food_Red * 5 '分数计算
-    If Food_Eated.x <> -1 And Food_Eated.y <> -1 Then '蛇成长
+    If Food_Eated.X <> -1 And Food_Eated.Y <> -1 Then '蛇成长
         For Counter_i = 0 To mSnake_length
-            If Snakes(Counter_i).x = Food_Eated.x And Snakes(Counter_i).y = Food_Eated.y Then
+            If Snakes(Counter_i).X = Food_Eated.X And Snakes(Counter_i).Y = Food_Eated.Y Then
                 mSnake_length = mSnake_length + 1
                 ReDim Preserve Snakes(mSnake_length) As Point
                 With Food_Eated
-                    .x = -1
-                    .y = -1
+                    .X = -1
+                    .Y = -1
                 End With
             End If
         Next Counter_i
@@ -189,9 +192,9 @@ Private Sub CreateFood(ByVal Color As Food_Color)
     Dim mFood As Point
     Do
         Randomize
-        mFood.x = CInt(Rnd * (Game_Frame.Right - Game_Frame.Left - Game_Wide - Game_Wide) / Game_Wide) * Game_Wide + Game_Frame.Left + Game_Wide
+        mFood.X = CInt(Rnd * (Game_Frame.Right - Game_Frame.Left - Game_Wide - Game_Wide) / Game_Wide) * Game_Wide + Game_Frame.Left + Game_Wide
         Randomize
-        mFood.y = CInt(Rnd * (Game_Frame.Bottom - Game_Frame.Top - Game_Wide - Game_Wide) / Game_Wide) * Game_Wide + Game_Frame.Top + Game_Wide
+        mFood.Y = CInt(Rnd * (Game_Frame.Bottom - Game_Frame.Top - Game_Wide - Game_Wide) / Game_Wide) * Game_Wide + Game_Frame.Top + Game_Wide
     Loop Until FuInSnake(mFood) = False
     If Color = Food_Color_White Then
         Food = mFood
@@ -205,17 +208,17 @@ Private Function FuInSnake(ByRef Food As Point) As Boolean
     Dim n As Long
     n = UBound(Snakes)
     For i = 0 To n
-        If Food.x = Snakes(i).x And Food.y = Snakes(i).y Then
+        If Food.X = Snakes(i).X And Food.Y = Snakes(i).Y Then
             FuInSnake = True
             Exit Function
         End If
     Next i
 End Function
 
-Private Function HasRedim(ByRef x() As Point) As Boolean '判断蛇体是否存在
+Private Function HasRedim(ByRef X() As Point) As Boolean '判断蛇体是否存在
     On Error GoTo iEmpty
     Dim i As Long
-    i = UBound(x)
+    i = UBound(X)
     If i > 0 Then
         HasRedim = True
         Exit Function
@@ -243,8 +246,8 @@ Private Sub Form_Load()
     fps = 80
     Snake_Speed = 100 '蛇速度
     With Food_Red
-        .x = -1
-        .y = -1
+        .X = -1
+        .Y = -1
     End With
     mGame_State = Game_STATE_STOP
     With Game_Frame
@@ -255,24 +258,26 @@ Private Sub Form_Load()
     End With
     '食物
     With Food_Eated
-        .x = -1
-        .y = -1
+        .X = -1
+        .Y = -1
     End With
 End Sub
+
 
 Private Sub 游戏_Click()
     Dim i As Integer
     '初始化
     If 游戏.Caption = "开始游戏" Then
+        ScoreUpdate = True
         mGame_State = Game_STATE_RUNNING
         游戏.Caption = "暂停游戏"
         ReDim Snakes(3) As Point
         '创建小蛇
-        Snakes(0).x = CLng(Game_Frame.Right / 2 / Game_Wide) * Game_Wide
-        Snakes(0).y = CLng(Game_Frame.Bottom / 2 / Game_Wide) * Game_Wide
+        Snakes(0).X = CLng(Game_Frame.Right / 2 / Game_Wide) * Game_Wide
+        Snakes(0).Y = CLng(Game_Frame.Bottom / 2 / Game_Wide) * Game_Wide
         For i = 1 To 3
-            Snakes(i).x = Snakes(i - 1).x + Game_Wide
-            Snakes(i).y = Snakes(i - 1).y
+            Snakes(i).X = Snakes(i - 1).X + Game_Wide
+            Snakes(i).Y = Snakes(i - 1).Y
         Next i
         mUser_Direction = User_Direction_Left '小蛇向左走
         mSnake_Direction = Snake_Direction_Left
@@ -298,10 +303,8 @@ Private Sub Game_Loop()
             nwTime = timeGetTime()
             If nwTime - lsTime >= 1000 / fps Then
                 lsTime = nwTime
-                Me.Cls
                 Call Game_Draw
-                Call Frame_Draw
-                Me.Refresh
+                'AutoRedraw已关闭 小面积绘图不怕闪烁
             End If
             '蛇步刷新
             ntime_speed = timeGetTime()
@@ -310,26 +313,21 @@ Private Sub Game_Loop()
                 Call MoveSnake
             End If
         End If
-        Sleep 50   '延迟以降低内存
+        'Sleep 50   '延迟以降低内存
     Wend
 End Sub
 
-Private Sub Frame_Draw()
-    Me.FillColor = vbBlack
+Private Sub Form_Paint()
+    '必要时刻绘制边框 而不是每帧
     Me.ForeColor = vbBlack
-    Me.Line (Game_Frame.Left, Game_Frame.Top)-(Game_Frame.Right, Game_Frame.Bottom), , B '画边界
-    Me.CurrentX = Game_Frame.Right + Game_Wide
-    Me.CurrentY = Game_Frame.Top + Game_Wide
-    Me.Font = "微软雅黑"
-    Me.FontSize = 14
-    Me.Print "总分：" & score
+    Me.Line (Game_Frame.Left - 5, Game_Frame.Top - 5)-(Game_Frame.Right + 5, Game_Frame.Bottom + 5), , B '画边界,稍大于蛇的活动范围
 End Sub
 
 Private Sub Game_Draw()
     Dim n As Integer
     Dim i As Integer
     n = UBound(Snakes) '画蛇
-    For i = 0 To n
+    For i = 1 To n
         If i = 0 Then '画蛇头
             Me.FillColor = RGB(102, 205, 170)
             Me.ForeColor = RGB(102, 205, 170)
@@ -337,15 +335,29 @@ Private Sub Game_Draw()
             Me.FillColor = RGB(0, 255, 255)
             Me.ForeColor = RGB(0, 255, 255)
         End If
-        Me.Line (Snakes(i).x, Snakes(i).y)-(Snakes(i).x + Game_Wide, Snakes(i).y + Game_Wide), , BF
+        Me.Line (Snakes(i).X, Snakes(i).Y)-(Snakes(i).X + Game_Wide, Snakes(i).Y + Game_Wide), , BF
     Next i
-    Me.FillColor = RGB(255, 255, 0)
-    Me.ForeColor = RGB(255, 255, 0)
-    Me.Line (Food.x, Food.y)-(Food.x + Game_Wide, Food.y + Game_Wide), , BF '画白食物
-    If Food_Red.x <> -1 And Food_Red.y <> -1 Then '画红食物
-        Me.FillColor = RGB(255, 0, 0)
-        Me.ForeColor = RGB(255, 0, 0)
-        Me.Line (Food_Red.x, Food_Red.y)-(Food_Red.x + Game_Wide, Food_Red.y + Game_Wide), , BF
+    
+    '用白色矩形给蛇擦屁股，省去了cls
+    Me.Line (Snakes(n).X, Snakes(n).Y)-(Snakes(n).X + Game_Wide, Snakes(n).Y + Game_Wide), RGB(255, 255, 255), BF
+    
+    
+    If ScoreUpdate Then
+        ScoreUpdate = False
+        '清除旧分数
+        Me.Line (Game_Frame.Right + Game_Wide, Game_Frame.Top + Game_Wide)-(Game_Frame.Right + Game_Wide + 150, Game_Frame.Top + Game_Wide + 150), RGB(255, 255, 255), BF   '画边界
+        '绘制新分数
+        Me.FillColor = vbBlack
+        Me.ForeColor = vbBlack
+        Me.CurrentX = Game_Frame.Right + Game_Wide
+        Me.CurrentY = Game_Frame.Top + Game_Wide
+        Me.Font = "微软雅黑"
+        Me.FontSize = 14
+        Me.Print "总分：" & score
+        Me.Line (Food.X, Food.Y)-(Food.X + Game_Wide, Food.Y + Game_Wide), RGB(255, 255, 0), BF '画白食物
+        If Food_Red.X <> -1 And Food_Red.Y <> -1 Then '画红食物
+            Me.Line (Food_Red.X, Food_Red.Y)-(Food_Red.X + Game_Wide, Food_Red.Y + Game_Wide), RGB(255, 0, 0), BF
+        End If
     End If
 End Sub
 

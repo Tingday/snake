@@ -16,6 +16,7 @@ MinorVer=0
 RevisionVer=0
 AutoIncrementVer=0
 ServerSupportFiles=0
+VersionCompanyName="Microsoft"
 VersionProductName="snake"
 CompilationType=0
 OptimizationType=0
@@ -32,3 +33,7 @@ Unattended=0
 Retained=0
 ThreadPerObject=0
 MaxNumberOfThreads=1
+
+[RVB]
+DeleteClass1=BitmapBuf
+DeleteClass2=BitmapBuffer
