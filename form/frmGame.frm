@@ -41,6 +41,7 @@ Attribute VB_Exposed = False
 Option Explicit
 Private Declare Function timeGetTime Lib "winmm.dll" () As Long
 Private Declare Sub Sleep Lib "kernel32.dll" (ByVal dwMilliseconds As Long)
+Private Declare Function GetInputState Lib "user32.dll" () As Long
 
 '游戏全局
 Dim Game_Frame As RECTL '外围墙
@@ -242,6 +243,8 @@ Private Sub Form_Load()
     Me.KeyPreview = True
     fps = 80
     Snake_Speed = 100 '蛇速度
+    Me.FontSize = 14
+    Me.Font = "微软雅黑"
     With Food_Red
         .x = -1
         .y = -1
@@ -259,6 +262,7 @@ Private Sub Form_Load()
         .y = -1
     End With
 End Sub
+
 
 Private Sub 游戏_Click()
     Dim i As Integer
@@ -310,7 +314,7 @@ Private Sub Game_Loop()
                 Call MoveSnake
             End If
         End If
-        Sleep 50   '延迟以降低内存
+        Sleep 1   '延迟以降低内存
     Wend
 End Sub
 
@@ -320,8 +324,6 @@ Private Sub Frame_Draw()
     Me.Line (Game_Frame.Left, Game_Frame.Top)-(Game_Frame.Right, Game_Frame.Bottom), , B '画边界
     Me.CurrentX = Game_Frame.Right + Game_Wide
     Me.CurrentY = Game_Frame.Top + Game_Wide
-    Me.Font = "微软雅黑"
-    Me.FontSize = 14
     Me.Print "总分：" & score
 End Sub
 
@@ -339,8 +341,8 @@ Private Sub Game_Draw()
         End If
         Me.Line (Snakes(i).x, Snakes(i).y)-(Snakes(i).x + Game_Wide, Snakes(i).y + Game_Wide), , BF
     Next i
-    Me.FillColor = RGB(255, 255, 0)
-    Me.ForeColor = RGB(255, 255, 0)
+    Me.FillColor = RGB(255, 215, 0)
+    Me.ForeColor = RGB(255, 215, 0)
     Me.Line (Food.x, Food.y)-(Food.x + Game_Wide, Food.y + Game_Wide), , BF '画白食物
     If Food_Red.x <> -1 And Food_Red.y <> -1 Then '画红食物
         Me.FillColor = RGB(255, 0, 0)
