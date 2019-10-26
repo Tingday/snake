@@ -20,12 +20,6 @@ Begin VB.Form frmGame
    Begin VB.Menu 退出游戏 
       Caption         =   "退出游戏"
    End
-   Begin VB.Menu 游戏规则 
-      Caption         =   "游戏规则"
-   End
-   Begin VB.Menu 关于 
-      Caption         =   "关于"
-   End
 End
 Attribute VB_Name = "frmGame"
 Attribute VB_GlobalNameSpace = False
@@ -151,33 +145,35 @@ Private Function MoveSnake() As Boolean '移动蛇与判断
             Exit Function
         End If
     Next current_snake
-    If Snakes(0).x = White_Food.x And Snakes(0).y = White_Food.y Then '食物碰撞检测
+    '食物碰撞检测
+    If Snakes(0).x = White_Food.x And Snakes(0).y = White_Food.y Then
         N_White_Food = N_White_Food + 1
         Food_Eated = White_Food
         CreateFood Food_Color_White
         If N_White_Food Mod 8 = 0 Then CreateFood Food_Color_Red '每吃8个食物就出现一个红色食物
     End If
-    If Snakes(0).x = Red_Food.x And Snakes(0).y = Red_Food.y Then '红食物碰撞检测
+    '红食物碰撞检测
+    If Snakes(0).x = Red_Food.x And Snakes(0).y = Red_Food.y Then
         N_Red_Food = N_Red_Food + 1
         Food_Eated = Red_Food
         Red_Food.x = -1
         Red_Food.y = -1
     End If
-    score = N_White_Food + N_Red_Food * 5 '分数计算
+    '分数计算
+    score = N_White_Food + N_Red_Food * 5
      '蛇成长
     If Food_Eated.x <> -1 And Food_Eated.y <> -1 Then
-        For current_snake = 0 To mSnake_length
-            If Snakes(current_snake).x = Food_Eated.x And Snakes(current_snake).y = Food_Eated.y Then
-                mSnake_length = mSnake_length + 1
-                ReDim Preserve Snakes(mSnake_length) As Point
-                With Food_Eated
-                    .x = -1
-                    .y = -1
-                End With
-            End If
-        Next current_snake
+        Debug.Print Snakes(0).x & "," & Snakes(0).y
+        Debug.Print Food_Eated.x & "," & Food_Eated.y
+        mSnake_length = mSnake_length + 1
+        ReDim Preserve Snakes(mSnake_length) As Point
+        With Food_Eated
+            .x = -1
+            .y = -1
+        End With
     End If
-    For current_snake = mSnake_length To 1 Step -1 '效果实现
+    '移动蛇体
+    For current_snake = mSnake_length To 1 Step -1
         If current_snake = 1 Then
             Snakes(current_snake) = mSnake_Head
         Else
@@ -243,7 +239,7 @@ End Sub
 Private Sub Form_Load()
     Me.KeyPreview = True
     fps = 80
-    Snake_Speed = 100 '蛇速度
+    Snake_Speed = 60 '蛇速度
     Me.FontSize = 14
     Me.Font = "微软雅黑"
     With Red_Food
@@ -355,12 +351,4 @@ End Sub
 Private Sub 退出游戏_Click()
     mGame_State = Game_STATE_STOP
     Unload Me
-End Sub
-
-Private Sub 游戏规则_Click()
-    frmRule.Show , Me
-End Sub
-
-Private Sub 关于_Click()
-    frmAbout.Show , Me
 End Sub

@@ -1,7 +1,5 @@
 Type=Exe
 Form=form\frmGame.frm
-Form=form\frmAbout.frm
-Form=form\frmRule.frm
 IconForm="frmGame"
 Startup="frmGame"
 HelpFile=""
