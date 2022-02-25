@@ -3,7 +3,7 @@ Begin VB.Form frmGame
    AutoRedraw      =   -1  'True
    BackColor       =   &H00FFFFFF&
    BorderStyle     =   1  'Fixed Single
-   Caption         =   "Ì°³ÔÉß"
+   Caption         =   "è´ªåƒè›‡"
    ClientHeight    =   7200
    ClientLeft      =   45
    ClientTop       =   675
@@ -13,12 +13,12 @@ Begin VB.Form frmGame
    ScaleHeight     =   480
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   640
-   StartUpPosition =   1  'ËùÓĞÕßÖĞĞÄ
-   Begin VB.Menu ÓÎÏ· 
-      Caption         =   "¿ªÊ¼ÓÎÏ·"
+   StartUpPosition =   1  'æ‰€æœ‰è€…ä¸­å¿ƒ
+   Begin VB.Menu æ¸¸æˆ 
+      Caption         =   "å¼€å§‹æ¸¸æˆ"
    End
-   Begin VB.Menu ÍË³öÓÎÏ· 
-      Caption         =   "ÍË³öÓÎÏ·"
+   Begin VB.Menu é€€å‡ºæ¸¸æˆ 
+      Caption         =   "é€€å‡ºæ¸¸æˆ"
    End
 End
 Attribute VB_Name = "frmGame"
@@ -27,35 +27,37 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 '-------------------------------------------
-'°æ±¾ 2018.03.28 ĞŞ¸Ä ×÷Õß£º0yufan0 vb°É
-'ÁªÏµ woyufan@163.com ÓĞÎÊÌâÇëÁªÏµÎÒ
-'±¾Ô´ÂëÎª±¾ÈË±àĞ´£¬ÈÏÕæÑ§Ï°¿ÉÒÔÁË½âfpsÓÎÏ·±àĞ´
+'ç‰ˆæœ¬ 2018.03.28 ä¿®æ”¹ ä½œè€…ï¼š0yufan0 vbå§
+'è”ç³» woyufan@163.com æœ‰é—®é¢˜è¯·è”ç³»æˆ‘
+'æœ¬æºç ä¸ºæœ¬äººç¼–å†™ï¼Œè®¤çœŸå­¦ä¹ å¯ä»¥äº†è§£fpsæ¸¸æˆç¼–å†™
 '-------------------------------------------
-'---------------------------------------------ÒÔÏÂÎªË½ÓĞ±äÁ¿----------------------------------------
+'---------------------------------------------ä»¥ä¸‹ä¸ºç§æœ‰å˜é‡----------------------------------------
 Option Explicit
 Private Declare Function timeGetTime Lib "winmm.dll" () As Long
 Private Declare Sub Sleep Lib "kernel32.dll" (ByVal dwMilliseconds As Long)
 Private Declare Function GetInputState Lib "user32.dll" () As Long
 
-'ÓÎÏ·È«¾Ö
-Dim Game_Frame As RECTL 'ÍâÎ§Ç½
-Dim fps As Long 'ÓÎÏ·Ë¢ĞÂÆµÂÊ£¨´Î/Ãë£©
-Const Game_Wide = 15 'Íø¸ñ¿í¶È
-'Éß±äÁ¿
-Dim Snakes() As Point 'Éß±¾Ìå
-Dim White_Food As Point 'ÆÕÍ¨Ê³Îï
-Dim Red_Food As Point '½±ÀøÊ®Îå
+'æ¸¸æˆå…¨å±€
+Dim Game_Frame As RECTL 'å¤–å›´å¢™
+Dim TICKS_PER_SECOND As Long 'æ¸¸æˆåˆ·æ–°é¢‘ç‡ï¼ˆç§’ï¼‰
+Dim SKIP_TICKS As Long
+Dim MAX_FRAMESKIP As Long
+Const Game_Wide = 15 'ç½‘æ ¼å®½åº¦
+'è›‡å˜é‡
+Dim Snakes() As Point 'è›‡æœ¬ä½“
+Dim White_Food As Point 'æ™®é€šé£Ÿç‰©
+Dim Red_Food As Point 'å¥–åŠ±åäº”
 Dim Food_Eated As Point
-Dim Snake_Speed As Long 'ÉßµÄËÙ¶È(ºÁÃë/Game_Wide)
-'ÓÎÏ·×´Ì¬
+Dim Snake_Speed As Long 'è›‡çš„é€Ÿåº¦(æ¯«ç§’/Game_Wide)
+'æ¸¸æˆçŠ¶æ€
 Dim mGame_State As Game_Status
 Dim mSnake_Direction As Snake_Direction
 Dim mUser_Direction As User_Direction
-'ÓÎÏ··ÖÊıÏà¹Ø
-Dim score As Long '×ÜµÃ·Ö = ÆÕÍ¨Ê³ÎïµÃ·Ö + ½±ÀøÊ³Îï * 5
+'æ¸¸æˆåˆ†æ•°ç›¸å…³
+Dim score As Long 'æ€»å¾—åˆ† = æ™®é€šé£Ÿç‰©å¾—åˆ† + å¥–åŠ±é£Ÿç‰© * 5
 Dim N_White_Food As Long
 Dim N_Red_Food As Long
-'ÀàĞÍ
+'ç±»å‹
 Private Type Point
         x As Long
         y As Long
@@ -67,7 +69,7 @@ Private Type RECTL
     Right As Long
     Bottom As Long
 End Type
-'ÁĞ±íÊı¾İ
+'åˆ—è¡¨æ•°æ®
 Private Enum Game_Status
     Game_STATE_RUNNING = 0
     Game_STATE_PAUSE = 1
@@ -89,15 +91,15 @@ Private Enum Food_Color
     Food_Color_White = 0
     Food_Color_Red = 1
 End Enum
-'--------------------------------------------------------±äÁ¿µ½´Ë½áÊø---------------------------------------
-'--------------------------------------------------------º¯ Êı ¹ı  ³Ì---------------------------------------
-Private Function MoveSnake() As Boolean 'ÒÆ¶¯ÉßÓëÅĞ¶Ï
-    Dim current_snake As Integer '¼ÆÊıÆ÷i
-    Dim mSnake_Head As Point 'ÉßÍ·×ø±ê
-    Dim mSnake_length As Long 'Éß³¤¶È£¨µ¥Î»1½ÚÉß£©
+'--------------------------------------------------------å˜é‡åˆ°æ­¤ç»“æŸ---------------------------------------
+'--------------------------------------------------------å‡½ æ•° è¿‡  ç¨‹---------------------------------------
+Private Function MoveSnake() As Boolean 'ç§»åŠ¨è›‡ä¸åˆ¤æ–­
+    Dim current_snake As Integer 'è®¡æ•°å™¨i
+    Dim mSnake_Head As Point 'è›‡å¤´åæ ‡
+    Dim mSnake_length As Long 'è›‡é•¿åº¦ï¼ˆå•ä½1èŠ‚è›‡ï¼‰
     mSnake_length = UBound(Snakes)
-    mSnake_Head = Snakes(0) '»ñµÃÉßÍ·
-    Select Case mUser_Direction '¸ù¾İ·½ÏòÒÆ¶¯£¬Ã¿´ÎÒ»¸öµ¥Î»Game_Wide
+    mSnake_Head = Snakes(0) 'è·å¾—è›‡å¤´
+    Select Case mUser_Direction 'æ ¹æ®æ–¹å‘ç§»åŠ¨ï¼Œæ¯æ¬¡ä¸€ä¸ªå•ä½Game_Wide
         Case User_Direction_Up
             If mSnake_Direction <> Snake_direction_Down Then
                 Snakes(0).y = Snakes(0).y - Game_Wide
@@ -131,37 +133,37 @@ Private Function MoveSnake() As Boolean 'ÒÆ¶¯ÉßÓëÅĞ¶Ï
                 Snakes(0).x = Snakes(0).x - Game_Wide
             End If
     End Select
-    '´©Ç½Ğ§¹ûÊµÏÖ
+    'ç©¿å¢™æ•ˆæœå®ç°
     If Snakes(0).y >= Game_Frame.Bottom Then Snakes(0).y = Game_Frame.Top
     If Snakes(0).y < Game_Frame.Top Then Snakes(0).y = Game_Frame.Bottom - Game_Wide
     If Snakes(0).x >= Game_Frame.Right Then Snakes(0).x = Game_Frame.Left
     If Snakes(0).x < Game_Frame.Left Then Snakes(0).x = Game_Frame.Right - Game_Wide
-    'Åö×²¼ì²â
+    'ç¢°æ’æ£€æµ‹
     For current_snake = 1 To mSnake_length
         If Snakes(0).x = Snakes(current_snake).x And Snakes(0).y = Snakes(current_snake).y Then
             mGame_State = Game_STATE_STOP
-            ÓÎÏ·.Caption = "¿ªÊ¼ÓÎÏ·"
-            MsgBox "ÓÎÏ·½áÊø£¡"
+            æ¸¸æˆ.Caption = "å¼€å§‹æ¸¸æˆ"
+            MsgBox "æ¸¸æˆç»“æŸï¼"
             Exit Function
         End If
     Next current_snake
-    'Ê³ÎïÅö×²¼ì²â
+    'é£Ÿç‰©ç¢°æ’æ£€æµ‹
     If Snakes(0).x = White_Food.x And Snakes(0).y = White_Food.y Then
         N_White_Food = N_White_Food + 1
         Food_Eated = White_Food
         CreateFood Food_Color_White
-        If N_White_Food Mod 8 = 0 Then CreateFood Food_Color_Red 'Ã¿³Ô8¸öÊ³Îï¾Í³öÏÖÒ»¸öºìÉ«Ê³Îï
+        If N_White_Food Mod 8 = 0 Then CreateFood Food_Color_Red 'æ¯åƒ8ä¸ªé£Ÿç‰©å°±å‡ºç°ä¸€ä¸ªçº¢è‰²é£Ÿç‰©
     End If
-    'ºìÊ³ÎïÅö×²¼ì²â
+    'çº¢é£Ÿç‰©ç¢°æ’æ£€æµ‹
     If Snakes(0).x = Red_Food.x And Snakes(0).y = Red_Food.y Then
         N_Red_Food = N_Red_Food + 1
         Food_Eated = Red_Food
         Red_Food.x = -1
         Red_Food.y = -1
     End If
-    '·ÖÊı¼ÆËã
+    'åˆ†æ•°è®¡ç®—
     score = N_White_Food + N_Red_Food * 5
-     'Éß³É³¤
+     'è›‡æˆé•¿
     If Food_Eated.x <> -1 And Food_Eated.y <> -1 Then
         Debug.Print Snakes(0).x & "," & Snakes(0).y
         Debug.Print Food_Eated.x & "," & Food_Eated.y
@@ -172,7 +174,7 @@ Private Function MoveSnake() As Boolean 'ÒÆ¶¯ÉßÓëÅĞ¶Ï
             .y = -1
         End With
     End If
-    'ÒÆ¶¯ÉßÌå
+    'ç§»åŠ¨è›‡ä½“
     For current_snake = mSnake_length To 1 Step -1
         If current_snake = 1 Then
             Snakes(current_snake) = mSnake_Head
@@ -182,7 +184,7 @@ Private Function MoveSnake() As Boolean 'ÒÆ¶¯ÉßÓëÅĞ¶Ï
     Next current_snake
     MoveSnake = True
 End Function
-'´´½¨Ê³Îï
+'åˆ›å»ºé£Ÿç‰©
 Private Sub CreateFood(ByVal Color As Food_Color)
     Dim mFood As Point
     Do
@@ -210,7 +212,7 @@ Private Function FuInSnake(ByRef White_Food As Point) As Boolean
     Next i
 End Function
 
-Private Function HasRedim(ByRef x() As Point) As Boolean 'ÅĞ¶ÏÉßÌåÊÇ·ñ´æÔÚ
+Private Function HasRedim(ByRef x() As Point) As Boolean 'åˆ¤æ–­è›‡ä½“æ˜¯å¦å­˜åœ¨
     On Error GoTo iEmpty
     Dim i As Long
     i = UBound(x)
@@ -238,10 +240,10 @@ End Sub
 
 Private Sub Form_Load()
     Me.KeyPreview = True
-    fps = 80
-    Snake_Speed = 60 'ÉßËÙ¶È
+    TICKS_PER_SECOND = 80
+    Snake_Speed = 60 'è›‡é€Ÿåº¦
     Me.FontSize = 14
-    Me.Font = "Î¢ÈíÑÅºÚ"
+    Me.Font = "å¾®è½¯é›…é»‘"
     With Red_Food
         .x = -1
         .y = -1
@@ -253,7 +255,7 @@ Private Sub Form_Load()
         .Bottom = .Top + 30 * Game_Wide
         .Right = .Left + 32 * Game_Wide
     End With
-    'Ê³Îï
+    'é£Ÿç‰©
     With Food_Eated
         .x = -1
         .y = -1
@@ -261,75 +263,77 @@ Private Sub Form_Load()
 End Sub
 
 
-Private Sub ÓÎÏ·_Click()
+Private Sub æ¸¸æˆ_Click()
     Dim i As Integer
-    '³õÊ¼»¯
-    If ÓÎÏ·.Caption = "¿ªÊ¼ÓÎÏ·" Then
+    'åˆå§‹åŒ–
+    If æ¸¸æˆ.Caption = "å¼€å§‹æ¸¸æˆ" Then
         mGame_State = Game_STATE_RUNNING
-        ÓÎÏ·.Caption = "ÔİÍ£ÓÎÏ·"
+        æ¸¸æˆ.Caption = "æš‚åœæ¸¸æˆ"
         ReDim Snakes(3) As Point
-        '´´½¨Ğ¡Éß
+        'åˆ›å»ºå°è›‡
         Snakes(0).x = CLng(Game_Frame.Right / 2 / Game_Wide) * Game_Wide
         Snakes(0).y = CLng(Game_Frame.Bottom / 2 / Game_Wide) * Game_Wide
         For i = 1 To 3
             Snakes(i).x = Snakes(i - 1).x + Game_Wide
             Snakes(i).y = Snakes(i - 1).y
         Next i
-        mUser_Direction = User_Direction_Left 'Ğ¡ÉßÏò×ó×ß
+        mUser_Direction = User_Direction_Left 'å°è›‡å‘å·¦èµ°
         mSnake_Direction = Snake_Direction_Left
-        CreateFood Food_Color_White    '´´½¨Ê³Îï
+        CreateFood Food_Color_White    'åˆ›å»ºé£Ÿç‰©
         Call Game_Loop
-    ElseIf ÓÎÏ·.Caption = "ÔİÍ£ÓÎÏ·" Then
-        ÓÎÏ·.Caption = "¼ÌĞøÓÎÏ·"
+    ElseIf æ¸¸æˆ.Caption = "æš‚åœæ¸¸æˆ" Then
+        æ¸¸æˆ.Caption = "ç»§ç»­æ¸¸æˆ"
         mGame_State = Game_STATE_PAUSE
-    ElseIf ÓÎÏ·.Caption = "¼ÌĞøÓÎÏ·" Then
+    ElseIf æ¸¸æˆ.Caption = "ç»§ç»­æ¸¸æˆ" Then
         mGame_State = Game_STATE_RUNNING
-        ÓÎÏ·.Caption = "ÔİÍ£ÓÎÏ·"
+        æ¸¸æˆ.Caption = "æš‚åœæ¸¸æˆ"
     End If
 End Sub
-'ÓÎÏ·Ñ­»·
+'ä¸»å¾ªç¯
 Private Sub Game_Loop()
     Dim lsTime As Long
     Dim nwTime As Long
     Dim ltime_speed As Long
     Dim ntime_speed As Long
-    While DoEvents
-        If mGame_State = Game_STATE_RUNNING Then
-            'UI»æ»­Ë¢ĞÂ
-            nwTime = timeGetTime()
-            If nwTime - lsTime >= 1000 / fps Then
-                lsTime = nwTime
-                Me.Cls
-                Call Game_Draw
-                Call Frame_Draw
-                Me.Refresh
-            End If
-            'Éß²½Ë¢ĞÂ
-            ntime_speed = timeGetTime()
-            If ntime_speed - ltime_speed >= Snake_Speed Then
-                ltime_speed = ntime_speed
-                Call MoveSnake
-            End If
+	dim loops as long
+	
+    While (mGame_State = Game_STATE_RUNNING) 
+        DoEvents
+		loops = 0
+        'æ˜¾ç¤ºå¸§ç‡
+        nwTime = timeGetTime()
+		While(nwTime - lsTime >= 1000 / TICKS_PER_SECOND And loops < MAX_FRAMESKIP)
+            lsTime = nwTime
+            Me.Cls
+            Call Game_Draw
+            Call Frame_Draw
+            Me.Refresh
+        Wend
+        'æ¸²æŸ“å¸§ç‡
+        ntime_speed = timeGetTime()
+        If ntime_speed - ltime_speed >= Snake_Speed Then
+            ltime_speed = ntime_speed
+            Call MoveSnake
         End If
-        Sleep 1   'ÑÓ³ÙÒÔ½µµÍÄÚ´æ
+        Sleep 1
     Wend
 End Sub
 
 Private Sub Frame_Draw()
     Me.FillColor = vbBlack
     Me.ForeColor = vbBlack
-    Me.Line (Game_Frame.Left, Game_Frame.Top)-(Game_Frame.Right, Game_Frame.Bottom), , B '»­±ß½ç
+    Me.Line (Game_Frame.Left, Game_Frame.Top)-(Game_Frame.Right, Game_Frame.Bottom), , B 'ç”»è¾¹ç•Œ
     Me.CurrentX = Game_Frame.Right + Game_Wide
     Me.CurrentY = Game_Frame.Top + Game_Wide
-    Me.Print "×Ü·Ö£º" & score
+    Me.Print "æ€»åˆ†ï¼š" & score
 End Sub
 
 Private Sub Game_Draw()
     Dim n As Integer
     Dim i As Integer
-    n = UBound(Snakes) '»­Éß
+    n = UBound(Snakes) 'ç”»è›‡
     For i = 0 To n
-        If i = 0 Then '»­ÉßÍ·
+        If i = 0 Then 'ç”»è›‡å¤´
             Me.FillColor = RGB(102, 205, 170)
             Me.ForeColor = RGB(102, 205, 170)
         Else
@@ -340,15 +344,15 @@ Private Sub Game_Draw()
     Next i
     Me.FillColor = RGB(255, 215, 0)
     Me.ForeColor = RGB(255, 215, 0)
-    Me.Line (White_Food.x, White_Food.y)-(White_Food.x + Game_Wide, White_Food.y + Game_Wide), , BF '»­°×Ê³Îï
-    If Red_Food.x <> -1 And Red_Food.y <> -1 Then '»­ºìÊ³Îï
+    Me.Line (White_Food.x, White_Food.y)-(White_Food.x + Game_Wide, White_Food.y + Game_Wide), , BF 'ç”»ç™½é£Ÿç‰©
+    If Red_Food.x <> -1 And Red_Food.y <> -1 Then 'ç”»çº¢é£Ÿç‰©
         Me.FillColor = RGB(255, 0, 0)
         Me.ForeColor = RGB(255, 0, 0)
         Me.Line (Red_Food.x, Red_Food.y)-(Red_Food.x + Game_Wide, Red_Food.y + Game_Wide), , BF
     End If
 End Sub
 
-Private Sub ÍË³öÓÎÏ·_Click()
+Private Sub é€€å‡ºæ¸¸æˆ_Click()
     mGame_State = Game_STATE_STOP
     Unload Me
 End Sub
